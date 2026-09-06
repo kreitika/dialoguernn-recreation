@@ -117,14 +117,18 @@ comparison.
 
 ## Project structure
 \`\`\`
-dataloader.py       # loads IEMOCAP features, handles variable-length dialogue batching
-model.py            # DialogueRNN architecture (3 GRUs)
-attention.py         # attention module over global states (Eq. 2-4 in paper)
-train.py            # training loop, masked loss, class weighting
-evaluate.py          # masked NLL loss + weighted accuracy/F1
-download_data.py    # reproducible data download script
-check_data.py        # sanity check for dataloader
-check_model.py       # sanity check for model forward pass
+dataloader.py        # loads IEMOCAP features, handles variable-length dialogue batching
+model.py              # DialogueRNN architecture (3 GRUs)
+attention.py          # attention over global states (Eq. 2-4 in paper)
+train.py              # training loop, class-weighted loss, fixed seed
+evaluate.py           # masked NLL loss + weighted accuracy/F1
+gpt_baseline.py       # GPT-4o-mini zero-shot baseline
+error_analysis.py     # shift vs no-shift accuracy analysis (extends Sec. 5.5)
+demo.py               # Gradio side-by-side demo
+make_plots.py         # generates assets/*.png
+download_data.py      # reproducible data download script
+check_data.py         # sanity check for dataloader
+check_model.py        # sanity check for model forward pass
 \`\`\`
 
 ## Reference
