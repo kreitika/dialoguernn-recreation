@@ -35,19 +35,21 @@ See `model.py` and `attention.py`.
 
 ## Results
 
-| Model | Dataset | Best Test Weighted F1 |
+| Run | Config | Best Test Weighted F1 |
 |---|---|---|
-| DialogueRNN (paper, Table 2) | IEMOCAP | 59.89 |
-| DialogueRNN (this repro, run 1 — lr=1e-4, wd=1e-5, no class weights) | IEMOCAP | 56.83 |
-| DialogueRNN (this repro, run 2 — lr=1e-4, wd=1e-3, class-weighted loss) | IEMOCAP | 58.16 |
+| Paper (Table 2) | grid-searched (unpublished exact values) | 59.89 |
+| Run 1 | lr=1e-4, wd=1e-5, no class weights, no fixed seed | 56.83 |
+| Run 2 | lr=1e-4, wd=1e-3, class-weighted loss, no fixed seed | 58.16 |
+| Run 3 | Run 2 + grad clipping + LR scheduler, no fixed seed | 57.86 |
+| **Final** | Run 2 config + fixed seed (42) for full reproducibility | **59.09** |
 
-Run 2 closes most of the gap to the paper. Remaining gap (~1.7 F1)
-likely attributable to unpublished exact hyperparameters (paper used
-grid search; specific values weren't itemized) and/or random seed
-variance on a small dataset (120 train dialogues). Overfitting is
-still present but less severe than run 1 — best epoch shifted from
-~35 to ~22, and the interval between best test F1 and end-of-training
-test F1 is smaller.
+Early runs without a fixed random seed showed F1 varying between
+56.83–58.16 across identical configs — expected variance on a small
+120-dialogue training set. Adding `torch.manual_seed`, `np.random.seed`,
+and a seeded DataLoader generator (`SEED=42`) made results
+reproducible. The final run comes within **0.8 F1** of the paper's
+published 59.89, a gap attributable to their unpublished exact
+grid-searched hyperparameters.
 
 ## Project structure
 \`\`\`

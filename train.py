@@ -1,4 +1,6 @@
 
+import random
+import numpy as np
 import torch
 from collections import Counter
 from torch.utils.data import DataLoader
@@ -6,12 +8,18 @@ from dataloader import IEMOCAPDataset
 from model import DialogueRNN
 from evaluate import masked_nll_loss, masked_accuracy_f1
 
+SEED = 42
+random.seed(SEED)
+np.random.seed(SEED)
+torch.manual_seed(SEED)
+if torch.backends.mps.is_available():
+    torch.mps.manual_seed(SEED)
+
 DEVICE = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
 print("Using device:", DEVICE)
 
 
 def run_epoch(model, loader, optimizer=None, class_weights=None):
-    """If optimizer is None, runs in eval mode (no backprop)."""
     training = optimizer is not None
     model.train() if training else model.eval()
 
@@ -24,7 +32,7 @@ def run_epoch(model, loader, optimizer=None, class_weights=None):
         if training:
             optimizer.zero_grad()
 
-        log_probs = model(text, speakers)          # (seq_len, batch, C)
+        log_probs = model(text, speakers)
         loss = masked_nll_loss(log_probs, labels, umask, class_weights)
 
         if training:
@@ -49,7 +57,7 @@ def compute_class_weights(dataset, num_classes=6):
     counts = Counter(all_labels)
     total = sum(counts.values())
     weights = torch.FloatTensor([total / counts.get(c, 1) for c in range(num_classes)])
-    weights = weights / weights.sum() * num_classes  # normalize so avg weight ~1
+    weights = weights / weights.sum() * num_classes
     return weights
 
 
@@ -57,8 +65,13 @@ def main():
     train_set = IEMOCAPDataset(train=True)
     test_set = IEMOCAPDataset(train=False)
 
-    train_loader = DataLoader(train_set, batch_size=16, shuffle=True, collate_fn=train_set.collate_fn)
-    test_loader = DataLoader(test_set, batch_size=16, shuffle=False, collate_fn=test_set.collate_fn)
+    g = torch.Generator()
+    g.manual_seed(SEED)
+
+    train_loader = DataLoader(train_set, batch_size=16, shuffle=True,
+                               collate_fn=train_set.collate_fn, generator=g)
+    test_loader = DataLoader(test_set, batch_size=16, shuffle=False,
+                              collate_fn=test_set.collate_fn)
 
     class_weights = compute_class_weights(train_set).to(DEVICE)
     print("Class weights:", class_weights)
