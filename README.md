@@ -99,6 +99,22 @@ mediocre-but-uniform rather than "good at stability, bad at surprises."
 
 See `error_analysis.py`.
 
+## Demo
+
+Run `python demo.py` and open the local URL — lets you pick any of the
+31 IEMOCAP test dialogues and see ground truth vs. DialogueRNN vs.
+GPT-4o-mini predictions side by side, per utterance.
+
+**Known scope limitation:** the demo works on real IEMOCAP test
+dialogues only, not free-text input. DialogueRNN was trained on the
+paper's pre-extracted 100-dim CNN utterance features (Section 3.2),
+and reproducing that exact feature extractor was out of scope for this
+project — the contribution being recreated here is the RNN
+architecture (Section 3.3), not the CNN feature extraction pipeline.
+GPT-4o-mini has no such constraint and could handle arbitrary text, but
+is kept on the same test dialogues here for a fair side-by-side
+comparison.
+
 ## Project structure
 \`\`\`
 dataloader.py       # loads IEMOCAP features, handles variable-length dialogue batching
