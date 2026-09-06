@@ -12,4 +12,58 @@ plus a GPT-4o-mini baseline comparison on the same task.
 conda create -n dialoguernn python=3.10 -y
 conda activate dialoguernn
 pip install -r requirements.txt
+python download_data.py
 \`\`\`
+
+## Data
+
+Uses the official IEMOCAP text features released by the DeCLaRe Lab
+(same features used in the original paper's codebase), downloaded
+automatically via `download_data.py`. 120 train / 31 test dialogues,
+matching Table 1 of the paper exactly.
+
+## Architecture
+
+Three connected GRUs, following the paper's Section 3.3:
+- **Global GRU** — encodes shared conversational context
+- **Party GRU** (with attention over global states) — tracks each
+  speaker's individual emotional state through the conversation
+- **Emotion GRU** — decodes the final emotion representation from the
+  speaker state, linking across speakers turn to turn
+
+See `model.py` and `attention.py`.
+
+## Results
+
+| Model | Dataset | Best Test Weighted F1 |
+|---|---|---|
+| DialogueRNN (paper, Table 2) | IEMOCAP | 59.89 |
+| DialogueRNN (this repro, run 1) | IEMOCAP | 56.83 |
+
+Run 1 settings: lr=1e-4, weight_decay=1e-5, batch_size=16, 60 epochs,
+no early stopping. Clear overfitting visible after ~epoch 35 (train
+accuracy 96% vs test F1 plateauing/declining) — paper's exact
+hyperparameters weren't fully published (grid search, not itemized).
+
+**Fix attempted (run 2):** increased weight_decay to 1e-3, added
+class-weighted loss to address label imbalance (paper notes "neutral"
+class dominates and causes false positives, Section 5.5). Results
+pending.
+
+## Project structure
+\`\`\`
+dataloader.py       # loads IEMOCAP features, handles variable-length dialogue batching
+model.py            # DialogueRNN architecture (3 GRUs)
+attention.py         # attention module over global states (Eq. 2-4 in paper)
+train.py            # training loop, masked loss, class weighting
+evaluate.py          # masked NLL loss + weighted accuracy/F1
+download_data.py    # reproducible data download script
+check_data.py        # sanity check for dataloader
+check_model.py       # sanity check for model forward pass
+\`\`\`
+
+## Reference
+
+Majumder, N., Poria, S., Hazarika, D., Mihalcea, R., Gelbukh, A., &
+Cambria, E. (2019). DialogueRNN: An Attentive RNN for Emotion Detection
+in Conversations. *AAAI*.
