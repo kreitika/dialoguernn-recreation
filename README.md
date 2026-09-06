@@ -51,6 +51,27 @@ reproducible. The final run comes within **0.8 F1** of the paper's
 published 59.89, a gap attributable to their unpublished exact
 grid-searched hyperparameters.
 
+## GPT-4o-mini Baseline Comparison
+
+| Model | Test Weighted F1 |
+|---|---|
+| GPT-4o-mini (zero-shot, full dialogue in-context) | 39.21 |
+| DialogueRNN (this repro) | 59.09 |
+| DialogueRNN (paper, Table 2) | 59.89 |
+
+DialogueRNN outperforms zero-shot GPT-4o-mini by ~20 weighted F1 points
+on the same 31 IEMOCAP test dialogues. This suggests that explicit
+architectural modeling of speaker state and conversational context
+(the paper's core contribution) still meaningfully outperforms a
+general-purpose LLM given no fine-tuning or few-shot examples on this
+task. See `gpt_baseline.py` for the prompting setup.
+
+**Note on methodology:** GPT-4o-mini was prompted zero-shot with the
+full dialogue in one call per dialogue (no few-shot examples, no
+fine-tuning). A stronger baseline would add few-shot examples or
+fine-tune GPT on the training split — a natural extension explored in
+Milestone 6.
+
 ## Project structure
 \`\`\`
 dataloader.py       # loads IEMOCAP features, handles variable-length dialogue batching
