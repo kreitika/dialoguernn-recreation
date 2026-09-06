@@ -1,0 +1,3 @@
+data/*.pkl
+data/DialogueRNN_features/
+__pycache__/
