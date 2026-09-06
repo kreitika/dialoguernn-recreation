@@ -1,21 +1,22 @@
+
 import torch
 from sklearn.metrics import f1_score, accuracy_score
-import numpy as np
 
-def masked_nll_loss(log_probs, labels, umask):
+def masked_nll_loss(log_probs, labels, umask, class_weights=None):
     """
     log_probs: (seq_len, batch, num_classes)
     labels:    (batch, seq_len)
     umask:     (batch, seq_len)  -- 1 for real utterance, 0 for padding
+    class_weights: optional (num_classes,) tensor to upweight rare classes
     """
     seq_len, batch_size, num_classes = log_probs.size()
-    log_probs = log_probs.transpose(0, 1).contiguous().view(-1, num_classes)  # (batch*seq_len, C)
-    labels = labels.contiguous().view(-1)                                     # (batch*seq_len,)
-    umask = umask.contiguous().view(-1)                                       # (batch*seq_len,)
+    log_probs = log_probs.transpose(0, 1).contiguous().view(-1, num_classes)
+    labels = labels.contiguous().view(-1)
+    umask = umask.contiguous().view(-1)
 
-    loss_fn = torch.nn.NLLLoss(reduction="none")
-    losses = loss_fn(log_probs, labels)          # (batch*seq_len,)
-    losses = losses * umask                      # zero out padded positions
+    loss_fn = torch.nn.NLLLoss(weight=class_weights, reduction="none")
+    losses = loss_fn(log_probs, labels)
+    losses = losses * umask
     return losses.sum() / umask.sum()
 
 

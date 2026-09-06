@@ -38,17 +38,16 @@ See `model.py` and `attention.py`.
 | Model | Dataset | Best Test Weighted F1 |
 |---|---|---|
 | DialogueRNN (paper, Table 2) | IEMOCAP | 59.89 |
-| DialogueRNN (this repro, run 1) | IEMOCAP | 56.83 |
+| DialogueRNN (this repro, run 1 — lr=1e-4, wd=1e-5, no class weights) | IEMOCAP | 56.83 |
+| DialogueRNN (this repro, run 2 — lr=1e-4, wd=1e-3, class-weighted loss) | IEMOCAP | 58.16 |
 
-Run 1 settings: lr=1e-4, weight_decay=1e-5, batch_size=16, 60 epochs,
-no early stopping. Clear overfitting visible after ~epoch 35 (train
-accuracy 96% vs test F1 plateauing/declining) — paper's exact
-hyperparameters weren't fully published (grid search, not itemized).
-
-**Fix attempted (run 2):** increased weight_decay to 1e-3, added
-class-weighted loss to address label imbalance (paper notes "neutral"
-class dominates and causes false positives, Section 5.5). Results
-pending.
+Run 2 closes most of the gap to the paper. Remaining gap (~1.7 F1)
+likely attributable to unpublished exact hyperparameters (paper used
+grid search; specific values weren't itemized) and/or random seed
+variance on a small dataset (120 train dialogues). Overfitting is
+still present but less severe than run 1 — best epoch shifted from
+~35 to ~22, and the interval between best test F1 and end-of-training
+test F1 is smaller.
 
 ## Project structure
 \`\`\`
