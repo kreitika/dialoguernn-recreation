@@ -41,10 +41,6 @@ Example of the expected format for 3 utterances:
 
 
 def parse_lines(raw, expected_len):
-    """
-    Parses 'N: tag' lines. Returns a list of length expected_len,
-    filling any missing/malformed line with 'neu'.
-    """
     results = {}
     for line in raw.splitlines():
         m = re.match(rf'^\s*(\d+)\s*[:.]\s*({VALID_TAGS})\s*$', line.strip())
@@ -52,7 +48,6 @@ def parse_lines(raw, expected_len):
             idx = int(m.group(1))
             tag = m.group(2)
             results[idx] = tag
-
     return [results.get(i + 1, "neu") for i in range(expected_len)]
 
 
@@ -60,7 +55,6 @@ def predict_dialogue(speakers, sentences):
     numbered = "\n".join(f"{i+1}. {spk}: {sent}" for i, (spk, sent) in enumerate(zip(speakers, sentences)))
     prompt = PROMPT_TEMPLATE.format(conversation=numbered, n=len(sentences))
 
-    # generous but bounded token budget: ~6 tokens/line is plenty for "12: fru"
     token_budget = min(4096, 20 * len(sentences) + 100)
 
     response = client.chat.completions.create(
@@ -72,7 +66,6 @@ def predict_dialogue(speakers, sentences):
     raw = response.choices[0].message.content.strip()
 
     tags = parse_lines(raw, len(sentences))
-    n_missing = sum(1 for t in tags if t == "neu") 
     return [LABEL_MAP[t] for t in tags]
 
 
@@ -80,6 +73,7 @@ def main():
     videoSpeakers, videoLabels, videoSentence, test_ids = load_test_dialogues()
 
     all_true, all_pred = [], []
+    per_dialogue_preds = {}
 
     for i, vid in enumerate(test_ids):
         speakers = videoSpeakers[vid]
@@ -90,6 +84,7 @@ def main():
 
         all_true.extend(true_labels)
         all_pred.extend(pred_labels)
+        per_dialogue_preds[vid] = pred_labels
 
         print(f"[{i+1}/{len(test_ids)}] dialogue {vid} done ({len(sentences)} utterances)")
         time.sleep(0.5)
@@ -103,6 +98,9 @@ def main():
 
     with open("model_outputs/gpt_baseline_results.json", "w") as f:
         json.dump({"accuracy": acc, "weighted_f1": f1}, f, indent=2)
+
+    with open("model_outputs/gpt_predictions.json", "w") as f:
+        json.dump(per_dialogue_preds, f, indent=2)
 
 
 if __name__ == "__main__":

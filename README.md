@@ -72,6 +72,33 @@ fine-tuning). A stronger baseline would add few-shot examples or
 fine-tune GPT on the training split — a natural extension explored in
 Milestone 6.
 
+## Error Analysis: Emotional Shifts (extends paper Section 5.5)
+
+The paper notes DialogueRNN performs far worse at points where a
+speaker's emotion changes from their own previous utterance ("shifts")
+than at emotionally stable points ("no-shifts") — 47.5% vs 69.2%
+accuracy in their Table/Section 5.5.
+
+| Model | Shift Accuracy | No-Shift Accuracy | Gap |
+|---|---|---|---|
+| DialogueRNN (paper) | 47.5 | 69.2 | 21.7 |
+| DialogueRNN (this repro) | 45.07 | 65.17 | 20.1 |
+| GPT-4o-mini (zero-shot) | 41.82 | 40.59 | 1.2 |
+
+This reproduction shows the same asymmetry the paper reports, at
+similar magnitude — evidence the reimplementation captures the
+architecture's real behavior, not just a matching aggregate score.
+
+Interestingly, GPT-4o-mini shows almost no shift/no-shift gap. A likely
+explanation: DialogueRNN explicitly maintains a per-speaker running
+state, so it's strongly biased toward predicting emotional continuity
+— accurate when the speaker stays consistent, but this same bias hurts
+it exactly when the emotion changes. GPT-4o-mini has no equivalent
+explicit per-speaker memory mechanism, so its performance is
+mediocre-but-uniform rather than "good at stability, bad at surprises."
+
+See `error_analysis.py`.
+
 ## Project structure
 \`\`\`
 dataloader.py       # loads IEMOCAP features, handles variable-length dialogue batching
